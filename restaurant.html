@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Grand Plate — Restaurant Billing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #faf7f2;
+      --bg2:       #f2ece0;
+      --surface:   #ffffff;
+      --border:    #e5ddd0;
+      --text:      #1a1410;
+      --muted:     #8c7b6a;
+      --accent:    #c0392b;
+      --accent2:   #8b2020;
+      --gold:      #b8860b;
+      --green:     #2e7d52;
+      --radius:    16px;
+      --shadow:    0 4px 32px rgba(100,60,20,.10);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    /* ── Decorative top bar ── */
+    .top-bar {
+      height: 5px;
+      background: linear-gradient(90deg, var(--accent), var(--gold), var(--accent2));
+    }
+
+    /* ── Hero Header ── */
+    .hero {
+      background: var(--text);
+      color: #faf7f2;
+      padding: 3.5rem 2rem 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(192,57,43,.18) 0%, transparent 65%),
+                  radial-gradient(ellipse at 20% 80%, rgba(184,134,11,.12) 0%, transparent 55%);
+    }
+    .hero-inner { position: relative; z-index: 1; }
+    .hero-badge {
+      display: inline-block; font-size: .68rem; letter-spacing: .22em;
+      text-transform: uppercase; border: 1px solid rgba(255,255,255,.2);
+      padding: .3rem .9rem; border-radius: 99px; color: rgba(255,255,255,.65);
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(2.6rem, 7vw, 4.2rem); font-weight: 700; line-height: 1;
+      letter-spacing: -.01em;
+    }
+    .hero h1 span { color: #d4883a; }
+    .hero p { margin-top: .7rem; color: rgba(255,255,255,.5); font-size: .88rem; letter-spacing: .05em; }
+
+    /* ── Main layout ── */
+    .main { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 2.2rem;
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 600;
+      color: var(--text); margin-bottom: 1.4rem;
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .section-title .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+
+    /* ── Menu showcase ── */
+    .menu-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: .6rem;
+      margin-bottom: 2rem;
+    }
+    @media(max-width:580px){ .menu-grid { grid-template-columns: repeat(3,1fr); } }
+
+    .menu-item {
+      border: 1.5px solid var(--border); border-radius: 12px;
+      padding: .85rem .5rem; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s;
+      background: var(--bg);
+    }
+    .menu-item:hover { border-color: var(--accent); background: #fff5f4; transform: translateY(-2px); }
+    .menu-item.selected { border-color: var(--accent); background: #fff5f4; box-shadow: 0 0 0 3px rgba(192,57,43,.12); }
+    .menu-item .emoji { font-size: 1.7rem; display: block; margin-bottom: .3rem; }
+    .menu-item .name  { font-size: .72rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--text); }
+    .menu-item .price { font-size: .78rem; color: var(--accent); font-weight: 500; margin-top: .15rem; }
+
+    /* ── Form ── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media(max-width:480px){ .form-row { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: .45rem; }
+    .field label { font-size: .75rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+    .field select, .field input {
+      background: var(--bg); border: 1.5px solid var(--border);
+      color: var(--text); font-family: 'Jost', sans-serif; font-size: .95rem;
+      padding: .75rem 1rem; border-radius: 10px;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+    }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238c7b6a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 1rem center; background-color: var(--bg); padding-right: 2.5rem;
+    }
+    .field select:focus, .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(192,57,43,.1); }
+
+    /* ── Submit button ── */
+    .btn-submit {
+      width: 100%; margin-top: 1.3rem; padding: .85rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: .9rem; font-weight: 500;
+      letter-spacing: .06em; text-transform: uppercase; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(192,57,43,.28);
+      transition: transform .15s, box-shadow .15s;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+    }
+    .btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(192,57,43,.38); }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+    .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; display:none; }
+    .spinner.show { display:block; }
+    @keyframes spin { to{ transform:rotate(360deg); } }
+
+    /* ── Error ── */
+    .alert { display:none; margin-top:1rem; padding:.8rem 1rem; border-radius:10px; font-size:.88rem; align-items:center; gap:.6rem; }
+    .alert.show { display:flex; animation:fadeUp .3s ease; }
+    .alert-err { background:#fef2f2; border:1px solid #fcd5d5; color:#c0392b; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Receipt ── */
+    .receipt { display:none; margin-top:1.5rem; }
+    .receipt.show { display:block; animation:fadeUp .45s ease; }
+
+    .receipt-header {
+      background: linear-gradient(135deg, var(--text), #3a2a1a);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 1.4rem 2rem; display:flex; align-items:center; gap:1rem;
+    }
+    .receipt-header .r-icon { font-size:2rem; }
+    .receipt-header h3 { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; color:#faf7f2; }
+    .receipt-header p  { font-size:.78rem; color:rgba(255,255,255,.45); margin-top:.1rem; }
+
+    .receipt-body { background:var(--surface); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius); padding:1.8rem 2rem; }
+
+    .r-row { display:flex; justify-content:space-between; align-items:center; padding:.55rem 0; border-bottom:1px dashed var(--border); font-size:.9rem; }
+    .r-row:last-of-type { border-bottom:none; }
+    .r-row .lbl { color:var(--muted); }
+    .r-row .val { font-weight:500; }
+    .r-row .val.disc { color:var(--green); }
+    .r-row .val.none { color:var(--muted); font-style:italic; font-weight:300; }
+
+    .r-total {
+      margin-top:1.2rem; padding:1.1rem 1.4rem;
+      background: var(--bg2); border:1.5px solid var(--border); border-radius:12px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .r-total .lbl { font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:500; }
+    .r-total .amount { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:700; color:var(--accent); }
+
+    /* ── Discount info strip ── */
+    .discount-info {
+      display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem;
+    }
+    .d-chip {
+      background:var(--bg2); border:1px solid var(--border); border-radius:99px;
+      padding:.3rem .85rem; font-size:.73rem; color:var(--muted);
+    }
+    .d-chip strong { color:var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-badge">Project 1 · Restaurant Billing System</span>
+    <h1>The Grand <span>Plate</span></h1>
+    <p>Tap an item · Enter quantity · Get your bill instantly</p>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- ── Order Form Card ── -->
+  <div class="card">
+    <h2 class="section-title"><span class="dot"></span>Our Menu</h2>
+
+    <!-- Visual menu grid -->
+    <div class="menu-grid" id="menu-grid">
+      <div class="menu-item" data-item="Burger" data-price="250">
+        <span class="emoji">🍔</span>
+        <span class="name">Burger</span>
+        <span class="price">₨250</span>
+      </div>
+      <div class="menu-item" data-item="Pizza" data-price="500">
+        <span class="emoji">🍕</span>
+        <span class="name">Pizza</span>
+        <span class="price">₨500</span>
+      </div>
+      <div class="menu-item" data-item="Sandwich" data-price="200">
+        <span class="emoji">🥪</span>
+        <span class="name">Sandwich</span>
+        <span class="price">₨200</span>
+      </div>
+      <div class="menu-item" data-item="Fries" data-price="150">
+        <span class="emoji">🍟</span>
+        <span class="name">Fries</span>
+        <span class="price">₨150</span>
+      </div>
+      <div class="menu-item" data-item="Drink" data-price="100">
+        <span class="emoji">🥤</span>
+        <span class="name">Drink</span>
+        <span class="price">₨100</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-row">
+      <div class="field">
+        <label for="r-item">Selected Item</label>
+        <select id="r-item">
+          <option value="">— Choose from menu above —</option>
+          <option value="Burger">Burger</option>
+          <option value="Pizza">Pizza</option>
+          <option value="Sandwich">Sandwich</option>
+          <option value="Fries">Fries</option>
+          <option value="Drink">Drink</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="r-qty">Quantity</label>
+        <input type="number" id="r-qty" min="1" max="99" placeholder="e.g. 2"/>
+      </div>
+    </div>
+
+    <!-- Discount chips -->
+    <div class="discount-info">
+      <div class="d-chip">Bill &gt; ₨1000 → <strong>10% off</strong></div>
+      <div class="d-chip">₨500–₨1000 → <strong>5% off</strong></div>
+      <div class="d-chip">Under ₨500 → <strong>No discount</strong></div>
+    </div>
+
+    <button class="btn-submit" id="r-btn">
+      <span class="spinner" id="r-spin"></span>
+      Calculate Bill
+    </button>
+
+    <div class="alert alert-err" id="r-alert">
+      <span>⚠</span><span id="r-alert-msg"></span>
+    </div>
+  </div>
+
+  <!-- ── Receipt ── -->
+  <div class="receipt" id="r-receipt">
+    <div class="receipt-header">
+      <span class="r-icon">🧾</span>
+      <div>
+        <h3>Your Bill</h3>
+        <p id="r-receipt-sub">Order summary</p>
+      </div>
+    </div>
+    <div class="receipt-body">
+      <div class="r-row"><span class="lbl">Item</span><span class="val" id="out-item">—</span></div>
+      <div class="r-row"><span class="lbl">Unit Price</span><span class="val" id="out-unit">—</span></div>
+      <div class="r-row"><span class="lbl">Quantity</span><span class="val" id="out-qty">—</span></div>
+      <div class="r-row"><span class="lbl">Original Bill</span><span class="val" id="out-original">—</span></div>
+      <div class="r-row"><span class="lbl">Discount Applied</span><span class="val" id="out-discount">—</span></div>
+      <div class="r-total">
+        <span class="lbl">Final Bill</span>
+        <span class="amount" id="out-final">—</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const fmt = n => `₨${Number(n).toLocaleString('en-PK')}`;
+
+  // Menu grid → auto-select dropdown
+  document.querySelectorAll('.menu-item').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.menu-item').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('r-item').value = card.dataset.item;
+    });
+  });
+
+  // Keep grid in sync with dropdown
+  document.getElementById('r-item').addEventListener('change', function() {
+    document.querySelectorAll('.menu-item').forEach(c => {
+      c.classList.toggle('selected', c.dataset.item === this.value);
+    });
+  });
+
+  document.getElementById('r-btn').addEventListener('click', async () => {
+    const item = document.getElementById('r-item').value;
+    const qty  = document.getElementById('r-qty').value;
+    const alertEl  = document.getElementById('r-alert');
+    const alertMsg = document.getElementById('r-alert-msg');
+    const spin     = document.getElementById('r-spin');
+    const receipt  = document.getElementById('r-receipt');
+
+    alertEl.classList.remove('show');
+    receipt.classList.remove('show');
+
+    if (!item) { alertMsg.textContent = 'Please select a menu item.'; alertEl.classList.add('show'); return; }
+    if (!qty || qty < 1) { alertMsg.textContent = 'Please enter a valid quantity.'; alertEl.classList.add('show'); return; }
+
+    spin.classList.add('show');
+    document.getElementById('r-btn').disabled = true;
+
+    try {
+      const res  = await fetch('/api/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({item, quantity:parseInt(qty)}) });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alertMsg.textContent = data.error;
+        alertEl.classList.add('show');
+      } else {
+        document.getElementById('out-item').textContent     = data.item;
+        document.getElementById('out-unit').textContent     = fmt(data.unit_price);
+        document.getElementById('out-qty').textContent      = data.quantity;
+        document.getElementById('out-original').textContent = fmt(data.original_bill);
+        document.getElementById('r-receipt-sub').textContent = `${data.quantity}× ${data.item}`;
+
+        const discEl = document.getElementById('out-discount');
+        if (data.discount > 0) {
+          const pct = (data.discount / data.original_bill * 100).toFixed(0);
+          discEl.textContent = `−${fmt(data.discount)} (${pct}% off)`;
+          discEl.className = 'val disc';
+        } else {
+          discEl.textContent = 'No discount';
+          discEl.className = 'val none';
+        }
+
+        document.getElementById('out-final').textContent = fmt(data.final_bill);
+        receipt.classList.add('show');
+      }
+    } catch(e) {
+      alertMsg.textContent = 'Network error. Is restaurant_app.py running on port 5001?';
+      alertEl.classList.add('show');
+    } finally {
+      spin.classList.remove('show');
+      document.getElementById('r-btn').disabled = false;
+    }
+  });
+
+  document.getElementById('r-qty').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('r-btn').click(); });
+</script>
+</body>
+</html>
